@@ -1,4 +1,4 @@
-"""Plugin description."""
+"""Scaffold addons and link repositories to projects in Odoo."""
 
 # --- Version information ------------------------------------------------------
 #

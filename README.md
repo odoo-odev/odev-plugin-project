@@ -1,6 +1,6 @@
-# ODEV - Plugin Template
+# ODEV - Project
 
-Plugins description.
+Scaffold addons and link repositories to projects in Odoo.
 
 ## Installation
 
@@ -10,5 +10,5 @@ need odev version 4.0.0 or above.
 Enable this plugin by running:
 
 ```bash
-odev plugin --enable odoo-odev/odev-plugin-template
+odev plugin --enable odoo-odev/odev-plugin-project
 ```
