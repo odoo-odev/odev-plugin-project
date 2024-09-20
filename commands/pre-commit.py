@@ -43,12 +43,15 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
         else:
             self.version = OdoobinProcess.version_from_addons(self._repository.path)
 
-        if not self.version:
-            raise self.error(f"Could not determine Odoo version from repository {self._repository.name!r}")
-
         with progress.spinner(f"Copying pre-commit config for Odoo {self.version}"):
             self._copy_config()
+
+        if self.console.confirm("Install pre-commit hooks?", default=True):
             self._install_hooks()
+
+        if not self._repository.repository.git.diff("--name-only", "--cached"):
+            logger.info("No changes made by Copier, nothing to commit")
+        elif self.console.confirm("Commit the changes made by Copier?", default=True):
             self._commit_changes()
 
         logger.info(
@@ -69,9 +72,12 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
             "dst_path": self._repository.path,
             "quiet": LOG_LEVEL != "DEBUG",
             "overwrite": True,
-            "data": {"odoo_version": str(self.version)},
+            "data": {},
             "unsafe": True,
         }
+
+        if self.version:
+            copier_params["data"]["odoo_version"] = str(self.version)
 
         with Stash(self._repository.repository):
             if self._is_fresh_install():
@@ -101,7 +107,8 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
                 # The `GIT_CONFIG` environment variable is temporarily set to `/dev/null` to avoid
                 # interfering with the user's global git configuration, as it could be setup as to use global hooks
                 # in which case pre-commit will fail to install its own hook
-                bash.execute("GIT_CONFIG=/dev/null pre-commit install")
+                bash.execute(f"cd {self._repository.path} && GIT_CONFIG=/dev/null pre-commit install")
+                logger.info(f"Pre-commit hook installed in repository {self._repository.name!r}")
             except bash.CalledProcessError as error:
                 raise self.error(f"Failed to install pre-commit hooks:\n{error.stderr.decode()}") from error
 
@@ -127,5 +134,6 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
                 assert self._repository.repository
                 self._repository.repository.git.add(".")
                 self._repository.repository.git.commit("-m", self._commit_message())
+                logger.info(f"Changes committed in branch {self._repository.repository.active_branch.name!r}")
             except GitCommandError as error:
                 raise self.error(f"Failed to commit changes:\n{error.stderr.strip()}") from error
