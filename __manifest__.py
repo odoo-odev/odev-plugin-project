@@ -1,4 +1,6 @@
-"""Scaffold addons and link repositories to projects in Odoo."""
+"""Follow-up on projects and setup working directories for creating new Odoo
+modules.
+"""
 
 # --- Version information ------------------------------------------------------
 #
