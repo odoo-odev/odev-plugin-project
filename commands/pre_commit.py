@@ -133,7 +133,7 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
             try:
                 assert self._repository.repository
                 self._repository.repository.git.add(".")
-                self._repository.repository.git.commit("-m", self._commit_message())
+                self._repository.repository.git.commit("-m", self._commit_message(), no_verify=True)
                 logger.info(f"Changes committed in branch {self._repository.repository.active_branch.name!r}")
             except GitCommandError as error:
                 raise self.error(f"Failed to commit changes:\n{error.stderr.strip()}") from error
