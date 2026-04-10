@@ -127,13 +127,14 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
             """
         )
 
-    def _commit_changes(self) -> None:
+    def _commit_changes(self, message: str | None = None, *, no_verify: bool = False) -> None:
         """Commit changes made by Copier."""
+        flags = ["--no-verify"] if no_verify else []
         with progress.spinner("Committing changes"):
             try:
                 assert self._repository.repository
                 self._repository.repository.git.add(".")
-                self._repository.repository.git.commit("-m", self._commit_message())
+                self._repository.repository.git.commit("-m", message or self._commit_message(), *flags)
                 logger.info(f"Changes committed in branch {self._repository.repository.active_branch.name!r}")
             except GitCommandError as error:
                 raise self.error(f"Failed to commit changes:\n{error.stderr.strip()}") from error
