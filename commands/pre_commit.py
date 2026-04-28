@@ -1,9 +1,10 @@
 from copier import run_copy, run_update
 from git.exc import GitCommandError
 
-from odev.common import bash, progress, string
+from odev.common import args, bash, progress, string
 from odev.common.commands import DatabaseOrRepositoryCommand, LocalDatabaseCommand
 from odev.common.connectors import GitConnector, Stash
+from odev.common.connectors.git import GITHUB_DOMAIN
 from odev.common.logging import LOG_LEVEL, logging
 from odev.common.odoobin import OdoobinProcess
 
@@ -25,6 +26,11 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
 
     _exclusive_arguments = [("database", "repository")]
 
+    version = args.String(
+        aliases=["-V", "--version"],
+        description="Force the Odoo version to use for the pre-commit configuration.",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -38,7 +44,9 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
     def run(self):
         self._repository.clone()
 
-        if self._database and self._database.version:
+        if self.args.version:
+            self.version = self.args.version
+        elif self._database and self._database.version:
             self.version = self._database.version
         else:
             self.version = OdoobinProcess.version_from_addons(self._repository.path)
@@ -86,7 +94,7 @@ class PreCommit(DatabaseOrRepositoryCommand, LocalDatabaseCommand):
                 self.console.print()
 
                 run_copy(
-                    f"gh:{PRE_COMMIT_REPOSITORY}",
+                    f"git@{GITHUB_DOMAIN}:{PRE_COMMIT_REPOSITORY}.git",
                     **copier_params,
                     defaults=False,
                 )
