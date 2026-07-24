@@ -1,0 +1,14 @@
+{
+  "files": {
+    "./commands/pre_commit.py": [
+      {
+        "code": "reportOptionalMemberAccess",
+        "range": {
+          "endColumn": 46,
+          "lineCount": 1,
+          "startColumn": 43
+        }
+      }
+    ]
+  }
+}
